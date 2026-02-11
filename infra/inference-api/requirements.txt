@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+mlflow
+torch
+transformers
+boto3
+pydantic
