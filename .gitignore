@@ -1,0 +1,22 @@
+# secrets
+.env
+*.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# training outputs
+outputs/
+checkpoints/
+mlruns/
+
+# data
+data/
+*.parquet
+*.csv
+
+# generated reports (optional)
+reports/*.png
+reports/*.csv
