@@ -84,7 +84,6 @@ def main():
         args=args,
         train_dataset=ds_tok["train"],
         eval_dataset=ds_tok["validation"],
-        tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
 
