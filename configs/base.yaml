@@ -1,0 +1,22 @@
+project_name: ticket-router-xlmrb
+dataset_name: Tobi-Bueck/customer-support-tickets
+
+text_fields: ["subject", "body"]
+label_field: "queue"
+language_field: "language"
+
+model_name: xlm-roberta-base
+max_length: 256
+
+train:
+  seed: 42
+  test_size: 0.15
+  val_size: 0.15
+  epochs: 1
+  batch_size: 8
+  lr: 2.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.06
+
+mlflow:
+  experiment: "ticket-router"
