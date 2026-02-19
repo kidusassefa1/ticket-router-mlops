@@ -11,6 +11,7 @@ from transformers import (
     AutoModelForSequenceClassification,
     TrainingArguments,
     Trainer,
+    DataCollatorWithPadding,
 )
 
 from data import DataConfig, load_and_prepare
@@ -44,6 +45,7 @@ def main():
     )
 
     tokenizer = AutoTokenizer.from_pretrained(cfg["model_name"])
+    data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     def tok(batch):
         return tokenizer(batch["text"], truncation=True, max_length=cfg["max_length"])
@@ -85,6 +87,7 @@ def main():
         train_dataset=ds_tok["train"],
         eval_dataset=ds_tok["validation"],
         compute_metrics=compute_metrics,
+        data_collator=data_collator,
     )
 
     # MLflow uses env vars you already set on tr-train-01:
