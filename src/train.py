@@ -101,7 +101,29 @@ def main():
         report_to=[],
     )
 
-    trainer = Trainer(
+    class WeightedLossTrainer(Trainer):
+        def __init__(self, class_weights: torch.Tensor, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.class_weights = class_weights
+
+        def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
+            labels = inputs.get("labels")
+            # transformers datasets sometimes use "label"
+            if labels is None and "label" in inputs:
+                labels = inputs["label"]
+                inputs = {k: v for k, v in inputs.items() if k != "label"}
+                inputs["labels"] = labels
+
+            outputs = model(**inputs)
+            logits = outputs.get("logits")
+
+            weights = self.class_weights.to(logits.device)
+            loss_fn = torch.nn.CrossEntropyLoss(weight=weights)
+            loss = loss_fn(logits, labels)
+
+            return (loss, outputs) if return_outputs else loss
+
+    trainer = WeightedLossTrainer(
         model=model,
         args=args,
         train_dataset=ds_tok["train"],
