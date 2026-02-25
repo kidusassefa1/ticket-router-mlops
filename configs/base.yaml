@@ -12,7 +12,7 @@ train:
   seed: 42
   test_size: 0.15
   val_size: 0.15
-  epochs: 1
+  epochs: 3
   batch_size: 8
   lr: 2.0e-5
   weight_decay: 0.01
