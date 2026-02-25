@@ -2,6 +2,7 @@ from __future__ import annotations
 import os
 import time
 import yaml
+import pandas as pd
 import numpy as np
 
 import mlflow
@@ -147,6 +148,17 @@ def main():
             **{f"train_{k}": v for k, v in cfg["train"].items()},
         })
 
+        os.makedirs("reports", exist_ok=True)
+
+        pd.DataFrame(
+            {"label_id": list(range(num_labels)),
+            "queue": [id2label[i] for i in range(num_labels)],
+            "count": [counts.get(i, 0) for i in range(num_labels)],
+            "weight": class_weights.tolist()}
+            ).to_csv("reports/class_weights.csv", index=False)
+        
+        mlflow.log_artifact("reports/class_weights.csv")
+        
         t0 = time.time()
         trainer.train()
         mlflow.log_metric("train_time_sec", time.time() - t0)
@@ -160,7 +172,6 @@ def main():
         for k, v in test_metrics.items():
             mlflow.log_metric(f"test_{k}", float(v))
 
-        os.makedirs("reports", exist_ok=True)
         cm_path = "reports/confusion_matrix.png"
         err_path = "reports/errors.csv"
 
