@@ -5,6 +5,9 @@ import yaml
 import numpy as np
 
 import mlflow
+import math
+import torch
+from collections import Counter
 from sklearn.metrics import accuracy_score, f1_score
 from transformers import (
     AutoTokenizer,
@@ -44,6 +47,18 @@ def main():
         )
     )
 
+    # --- class weights (to handle imbalance) ---
+    train_labels = ds["train"]["label"]
+    counts = Counter(train_labels)
+    num_labels = len(label2id)
+
+    # weight for class c = total / (num_labels * count[c])
+    total = len(train_labels)
+    class_weights = torch.tensor(
+        [total / (num_labels * counts.get(i, 1)) for i in range(num_labels)],
+        dtype=torch.float,
+    )
+
     tokenizer = AutoTokenizer.from_pretrained(cfg["model_name"])
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
@@ -63,6 +78,10 @@ def main():
         label2id=label2id,
     )
 
+    steps_per_epoch = math.ceil(len(ds["train"]) / cfg["train"]["batch_size"])
+    total_steps = steps_per_epoch * int(cfg["train"]["epochs"])
+    warmup_steps = int(cfg["train"]["warmup_ratio"] * total_steps)
+
     args = TrainingArguments(
         output_dir="outputs",
         eval_strategy="epoch",
@@ -74,7 +93,8 @@ def main():
         num_train_epochs=cfg["train"]["epochs"],
         learning_rate=cfg["train"]["lr"],
         weight_decay=cfg["train"]["weight_decay"],
-        warmup_ratio=cfg["train"]["warmup_ratio"],
+        warmup_steps=warmup_steps,
+        max_grad_norm=1.0,
         load_best_model_at_end=True,
         metric_for_best_model="f1_macro",
         greater_is_better=True,
@@ -88,6 +108,7 @@ def main():
         eval_dataset=ds_tok["validation"],
         compute_metrics=compute_metrics,
         data_collator=data_collator,
+        class_weights=class_weights,
     )
 
     # MLflow uses env vars you already set on tr-train-01:
