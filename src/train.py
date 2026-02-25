@@ -23,6 +23,15 @@ from mlflow_utils import save_confusion_matrix, save_top_errors
 
 
 def compute_metrics(eval_pred):
+    """Compute metrics for model evaluation.
+
+    Args:
+        eval_pred (tuple): A tuple containing logits and labels.
+
+    Returns:
+        dict: A dictionary containing accuracy and F1 scores (macro and weighted).
+    """
+    
     logits, labels = eval_pred
     preds = np.argmax(logits, axis=1)
     return {
@@ -33,6 +42,15 @@ def compute_metrics(eval_pred):
 
 
 def main():
+    """Main function to execute the training process.
+
+    This function loads configuration settings, prepares the dataset, and
+    initiates the training of the model. It handles class weights to
+    address any class imbalance in the dataset.
+
+    Returns:
+        None
+    """
     with open("configs/base.yaml", "r") as f:
         cfg = yaml.safe_load(f)
 
