@@ -1,4 +1,4 @@
-# Ticket Router MLOps (Project 2)
+# Ticket Router MLOps
 
 A production-style AI/ML system that trains a transformer model to route customer support tickets into the correct **queue** (52 classes), tracks experiments in **MLflow**, stores artifacts in **MinIO**, and serves predictions via a **FastAPI inference service**.
 
