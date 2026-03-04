@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os, time, json
+from pathlib import Path
 from fastapi import FastAPI
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
@@ -34,14 +35,35 @@ def load_model():
     if _id2label is None:
         _id2label = {i: str(i) for i in range(cfg.num_labels)}
 
+def _read_model_meta(model_dir: str) -> dict | None:
+    meta_path = Path(model_dir) / "model_meta.json"
+    if not meta_path.exists():
+        return None
+    try:
+        return json.loads(meta_path.read_text())
+    except Exception:
+        return {"error": "failed_to_read_model_meta.json"}
+
 @app.get("/health")
 def health():
     load_model()
+
+    meta = _read_model_meta(MODEL_DIR)
+
+    # device (safe even if on CPU)
+    device = "unknown"
+    try:
+        device = str(next(_model.parameters()).device)
+    except Exception:
+        pass
+
     return {
         "status": "ok",
-        "version": APP_VERSION,
-        "device": str(next(_model.parameters()).device),
-        "num_labels": int(_model.config.num_labels),
+        "app_version": APP_VERSION,          # your API code version
+        "model_dir": MODEL_DIR,              # should be /opt/ticket-router/current
+        "device": device,
+        "num_labels": int(getattr(_model.config, "num_labels", -1)),
+        "model": meta,                       # name, resolved_version, run_id, etc.
     }
 
 @app.post("/predict", response_model=PredictResponse)
