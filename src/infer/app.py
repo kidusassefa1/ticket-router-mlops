@@ -9,10 +9,10 @@ from .schemas import PredictRequest, PredictResponse
 from .utils import build_text, predict_topk
 
 APP_VERSION = "0.1.0"
-MODEL_DIR = os.environ.get("MODEL_DIR", "/opt/ticket-router/model/model")
+MODEL_DIR = os.environ.get("MODEL_DIR", "/opt/ticket-router/current")
 
 app = FastAPI(title="Ticket Router Inference API", version=APP_VERSION)
-
+ 
 _model = None
 _tok = None
 _id2label = None
@@ -34,6 +34,11 @@ def load_model():
     _id2label = getattr(cfg, "id2label", None)
     if _id2label is None:
         _id2label = {i: str(i) for i in range(cfg.num_labels)}
+    # Normalize id2label keys to int (HF sometimes stores them as strings)
+    try:
+        _id2label = {int(k): v for k, v in _id2label.items()}
+    except Exception:
+        pass
 
 def _read_model_meta(model_dir: str) -> dict | None:
     meta_path = Path(model_dir) / "model_meta.json"
