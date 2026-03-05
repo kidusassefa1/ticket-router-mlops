@@ -7,6 +7,7 @@ import torch
 
 from .schemas import PredictRequest, PredictResponse
 from .utils import build_text, predict_topk
+from .logging_utils import log_prediction
 
 APP_VERSION = "0.1.0"
 MODEL_DIR = os.environ.get("MODEL_DIR", "/opt/ticket-router/current")
@@ -83,6 +84,19 @@ def predict(req: PredictRequest):
     top_k = [{_id2label.get(i, str(i)): float(p)} for i, p in top]
 
     latency_ms = (time.time() - t0) * 1000.0
+
+    try:
+        meta = _read_model_meta(MODEL_DIR)
+        log_prediction({
+            "model_version": meta["resolved_version"] if meta else "unknown",
+            "predicted_queue": predicted_queue,
+            "confidence": float(conf),
+            "latency_ms": latency_ms,
+            "text_length": len(text),
+        })
+    except Exception:
+        pass
+
     return PredictResponse(
         predicted_queue=predicted_queue,
         confidence=float(conf),
