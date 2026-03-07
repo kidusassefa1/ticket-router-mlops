@@ -8,6 +8,7 @@ import torch
 from .schemas import PredictRequest, PredictResponse
 from .utils import build_text, predict_topk
 from .logging_utils import log_prediction
+from .stats_utils import compute_stats
 
 APP_VERSION = "0.1.0"
 MODEL_DIR = os.environ.get("MODEL_DIR", "/opt/ticket-router/current")
@@ -104,3 +105,6 @@ def predict(req: PredictRequest):
         latency_ms=float(latency_ms),
     )
 
+@app.get("/stats")
+def stats(n: int = 200):
+    return compute_stats(n)
