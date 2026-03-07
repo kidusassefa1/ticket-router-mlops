@@ -103,3 +103,4 @@ def predict(req: PredictRequest):
         top_k=top_k,
         latency_ms=float(latency_ms),
     )
+
